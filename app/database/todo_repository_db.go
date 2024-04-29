@@ -1,4 +1,4 @@
-package database
+package database //เชื่อม database
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 
 type TodoRepository interface {
 	CreateTodo(ctx context.Context, createTodoRequest *models.CreateTodoRequest) error
+	ReadTodo(ctx context.Context) (*[]models.ResponseReadTodo, error)
 }
 
 type TodoRepositoryDB struct {
@@ -21,10 +22,10 @@ func NewTodoRepositoryDB(pool *pgxpool.Pool) TodoRepository {
 	return &TodoRepositoryDB{
 		pool: pool,
 	}
-}
+} //pool ไว้เชื่อมกกับ db
 
 func (r *TodoRepositoryDB) CreateTodo(ctx context.Context, createTodoRequest *models.CreateTodoRequest) error {
-	tx, err := r.pool.Begin(ctx)
+	tx, err := r.pool.Begin(ctx) //เริ่มทำงาน
 	if err != nil {
 		return err
 	}
@@ -35,10 +36,10 @@ func (r *TodoRepositoryDB) CreateTodo(ctx context.Context, createTodoRequest *mo
 		default:
 			_ = tx.Rollback(ctx)
 		}
-	}()
+	}() //
 
-	stmt := `INSERT INTO todo_list (todo_name,is_check)
-        VALUES(@todo_name, @is_check);`
+	stmt := `INSERT INTO todo (task,completed)
+		VALUES(@todo_name, @is_check);`
 	args := pgx.NamedArgs{
 		"todo_name": createTodoRequest.TodoName,
 		"is_check":  createTodoRequest.IsCheck,
@@ -50,4 +51,38 @@ func (r *TodoRepositoryDB) CreateTodo(ctx context.Context, createTodoRequest *mo
 	}
 
 	return err
+}
+
+func (r *TodoRepositoryDB) ReadTodo(ctx context.Context) (*[]models.ResponseReadTodo, error) {
+	query := `SELECT t.id,t.task,t.completed
+	FROM todo t ;`
+
+	rows, err := r.pool.Query(ctx, query) //เริ่มทำงาน
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var responseReadTodoList []models.ResponseReadTodo
+	for rows.Next() {
+		var responseReadTodo models.ResponseReadTodo
+		err := rows.Scan(
+			&responseReadTodo.Id,
+			&responseReadTodo.TodoName,
+			&responseReadTodo.IsCheck,
+		)
+		if err != nil {
+			return nil, err
+		}
+		responseReadTodoList = append(responseReadTodoList, responseReadTodo)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if len(responseReadTodoList) == 0 {
+		return &[]models.ResponseReadTodo{}, nil
+	}
+
+	return &responseReadTodoList, nil
 }

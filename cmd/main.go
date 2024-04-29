@@ -24,6 +24,7 @@ func main() {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+
 	cfg := config.InitialConfig()
 
 	postgresClient, err := newPostgresClient(ctx, cfg)
@@ -36,7 +37,9 @@ func main() {
 
 	todoHandler := api.NewTodoHandler(database.NewTodoRepositoryDB(postgresClient))
 
-	app.Post("/create-todo", todoHandler.CreateTodo)
+	app.Post("/create-todo", todoHandler.CreateTodo) //post ใช้กับ jason
+	app.Get("/read-todo", todoHandler.ReadTodo)
+
 	healthCheck(app, postgresClient)
 
 	log.Printf("Listening on port: %s", cfg.Server.Port)
@@ -44,7 +47,7 @@ func main() {
 		if err := app.Listen(fmt.Sprintf(":%s", cfg.Server.Port)); err != nil {
 			log.Fatal(err)
 		}
-	}()
+	}() //app := initFiber() run port อะไร
 
 	gracefulShutdown(app)
 }
