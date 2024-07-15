@@ -13,6 +13,7 @@ import (
 	"todo/config"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -34,11 +35,20 @@ func main() {
 	defer postgresClient.Close()
 
 	app := initFiber()
-
+	app.Use(cors.New(cors.ConfigDefault))
+	app.Use(func(c *fiber.Ctx) error {
+		c.Set("Access-Control-Allow-Origin", "*")                            // กำหนดให้ทุกโดเมนสามารถเข้าถึงได้
+		c.Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")      // กำหนดเมทอด HTTP ที่อนุญาต
+		c.Set("Access-Control-Allow-Headers", "Content-Type, Authorization") // กำหนด HTTP Headers ที่อนุญาต
+		return c.Next()
+	})
 	todoHandler := api.NewTodoHandler(database.NewTodoRepositoryDB(postgresClient))
 
-	app.Post("/create-todo", todoHandler.CreateTodo) //post ใช้กับ jason
-	app.Get("/read-todo", todoHandler.ReadTodo)
+	app.Post("/create-todo", todoHandler.CreateTodo)
+	app.Post("/read-todo", todoHandler.ReadTodo)
+	app.Post("/update-todo", todoHandler.UpdateTodo)
+	app.Delete("/delete-todo", todoHandler.DeleteTodo)
+	app.Get("/readall-todo", todoHandler.ReadTodoAll)
 
 	healthCheck(app, postgresClient)
 
