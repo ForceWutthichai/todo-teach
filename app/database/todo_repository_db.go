@@ -2,7 +2,6 @@ package database //เชื่อม database
 
 import (
 	"context"
-	"fmt"
 
 	"todo/models"
 
@@ -60,12 +59,15 @@ func (r *TodoRepositoryDB) CreateTodo(ctx context.Context, createTodoRequest *mo
 func (r *TodoRepositoryDB) ReadTodo(ctx context.Context, req *models.ReadTodoRequest) (*[]models.ResponseReadTodo, error) {
 	query := `SELECT t.id, t.task, t.completed
 	FROM todo t
-	WHERE 1=1 `
+	WHERE 1=1`
+	args := []interface{}{}
 
-	if req.IsCheck != nil {
-		query += "AND t.completed =" + fmt.Sprint(*req.IsCheck)
+	if req.TodoName != "" {
+		query += " AND t.task = $1"
+		args = append(args, req.TodoName)
 	}
-	rows, err := r.pool.Query(ctx, query) //เริ่มทำงาน
+
+	rows, err := r.pool.Query(ctx, query, args...) // pass args here
 	if err != nil {
 		return nil, err
 	}
@@ -94,6 +96,45 @@ func (r *TodoRepositoryDB) ReadTodo(ctx context.Context, req *models.ReadTodoReq
 
 	return &responseReadTodoList, nil
 }
+
+// func (r *TodoRepositoryDB) ReadTodo(ctx context.Context, req *models.ReadTodoRequest) (*[]models.ResponseReadTodo, error) {
+// 	query := `SELECT t.id, t.task, t.completed
+// 	FROM todo t
+// 	WHERE 1=1 `
+
+// 	if req.IsCheck != nil {
+// 		query += "AND t.completed = " + fmt.Sprint(*req.IsCheck)
+// 	}
+//
+// 	rows, err := r.pool.Query(ctx, query) //เริ่มทำงานtodo_name
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer rows.Close()
+
+// 	var responseReadTodoList []models.ResponseReadTodo
+// 	for rows.Next() {
+// 		var responseReadTodo models.ResponseReadTodo
+// 		err := rows.Scan(
+// 			&responseReadTodo.Id,
+// 			&responseReadTodo.TodoName,
+// 			&responseReadTodo.IsCheck,
+// 		)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		responseReadTodoList = append(responseReadTodoList, responseReadTodo)
+// 	}
+
+// 	if err := rows.Err(); err != nil {
+// 		return nil, err
+// 	}
+// 	if len(responseReadTodoList) == 0 {
+// 		return &[]models.ResponseReadTodo{}, nil
+// 	}
+
+// 	return &responseReadTodoList, nil
+// }
 
 func (r *TodoRepositoryDB) UpdateTodo(ctx context.Context, req *models.UpdateTodoRequest) error {
 	tx, err := r.pool.Begin(ctx) //เริ่มทำงาน

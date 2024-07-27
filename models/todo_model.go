@@ -27,5 +27,6 @@ type DeleteTodo struct {
 }
 
 type ReadTodoRequest struct {
-	IsCheck *bool `json:"is_check"`
+	TodoName string `json:"todo_name" validate:"required"`
+	// IsCheck *bool `json:"is_check"`
 }

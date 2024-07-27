@@ -78,15 +78,15 @@ func (h *TodoHandler) DeleteTodo(ctx *fiber.Ctx) error {
 
 	if err := ctx.BodyParser(&request); err != nil {
 		return models.Response(constants.StatusCodeBadRequest, constants.BadRequestMessage, err.Error()).SendResponse(ctx, http.StatusBadRequest)
-	} //แปลงค่า
+	}
 	validate := validator.New()
 	if err := validate.Struct(request); err != nil {
 		return models.Response(constants.StatusCodeBadRequest, nil, constants.BadRequestMessage).SendResponse(ctx, http.StatusBadRequest)
-	} //ค่า validat ห้ามเป็นค่าว่าง ทดสอบความถูกต้อง
+	}
 
 	if err := h.todoRepository.DeleteTodo(ctx.Context(), request); err != nil {
 		return models.Response(constants.StatusCodeSystemError, nil, constants.StatusCodeSystemErrorMessage).SendResponse(ctx, http.StatusInternalServerError)
-	} //เป็นฟังชันก์ที่เราเขียนเอง   //การเรียกใช้
+	}
 	return models.ResponseSuccess(constants.StatusCodeSuccess, constants.SuccessMessage, nil).SendResponseSuccess(ctx, http.StatusOK)
 }
 
@@ -94,6 +94,6 @@ func (h *TodoHandler) ReadTodoAll(ctx *fiber.Ctx) error {
 	data, err := h.todoRepository.ReadTodoAll(ctx.Context())
 	if err != nil {
 		return models.Response(constants.StatusCodeSystemError, nil, constants.StatusCodeSystemErrorMessage).SendResponse(ctx, http.StatusInternalServerError)
-	} //เป็นฟังชันก์ที่เราเขียนเอง   //การเรียกใช้
+	}
 	return models.ResponseSuccess(constants.StatusCodeSuccess, constants.SuccessMessage, data).SendResponseSuccess(ctx, http.StatusOK)
 }
