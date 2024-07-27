@@ -1,9 +1,9 @@
 package constants
 
 const (
-	StatusCodeSuccess      = "0000"
-	StatusCodeBadRequest   = "400"
-	StatusCodeSystemError  = "5000"
+	StatusCodeSuccess     = "0000"
+	StatusCodeBadRequest  = "400"
+	StatusCodeSystemError = "5000"
 
 	SuccessMessage               = "success"
 	DataNotFoundMessage          = "data not found"
